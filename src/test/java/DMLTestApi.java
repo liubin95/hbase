@@ -1,7 +1,6 @@
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Put;
@@ -51,11 +50,15 @@ public class DMLTestApi {
     @Test
     public void dataPut() throws IOException {
         // 创建put
-        final byte[] rowKey = Bytes.toBytes(System.currentTimeMillis());
+        final byte[] rowKey = Bytes.toBytes("1001");
         // 列族
         Put put = new Put(rowKey);
         // 列族,列名,值
         put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("name"), Bytes.toBytes("zhangsan"));
+        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("sex"), Bytes.toBytes("man"));
+        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("addr"), Bytes.toBytes("大连"));
+        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("height"), Bytes.toBytes("1.7"));
+        put.addColumn(Bytes.toBytes("exam"), Bytes.toBytes("math"), Bytes.toBytes("100"));
         table.put(put);
     }
 }
