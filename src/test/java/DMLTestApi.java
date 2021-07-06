@@ -1,5 +1,6 @@
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -87,7 +88,15 @@ public class DMLTestApi {
         }
         final Result[] results = table.get(getList);
         for (Result result : results) {
-            LOGGER.info(result.toString());
+            final Cell[] cells = result.rawCells();
+            StringBuilder stringBuilder = new StringBuilder();
+            for (Cell cell : cells) {
+                final String f = Bytes.toString(cell.getFamilyArray());
+                final String q = Bytes.toString(cell.getQualifierArray());
+                final String v = Bytes.toString(cell.getValueArray());
+                stringBuilder.append(String.format("%s:%s:%s", f, q, v));
+            }
+            LOGGER.info(stringBuilder.toString());
         }
     }
 }
