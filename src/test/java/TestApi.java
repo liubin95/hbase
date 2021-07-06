@@ -1,5 +1,6 @@
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
@@ -84,5 +85,13 @@ public class TestApi {
         admin.disableTable(tableName);
         admin.deleteTable(tableName);
         LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>> " + admin.tableExists(tableName));
+    }
+
+    @Test
+    public void nameSpaceCreat() throws IOException {
+        final NamespaceDescriptor test = NamespaceDescriptor.create("test")
+                .build();
+        admin.createNamespace(test);
+        LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>> " + Arrays.toString(admin.listNamespaces()));
     }
 }
