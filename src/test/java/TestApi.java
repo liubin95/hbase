@@ -1,6 +1,7 @@
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
+import org.apache.hadoop.hbase.NamespaceExistException;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
@@ -89,9 +90,13 @@ public class TestApi {
 
     @Test
     public void nameSpaceCreat() throws IOException {
-        final NamespaceDescriptor test = NamespaceDescriptor.create("test")
-                .build();
-        admin.createNamespace(test);
+        try {
+            final NamespaceDescriptor test = NamespaceDescriptor.create("test")
+                    .build();
+            admin.createNamespace(test);
+        } catch (NamespaceExistException namespaceExistException) {
+            LOGGER.info("nameSpaceCreat namespaceExistException");
+        }
         LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>> " + Arrays.toString(admin.listNamespaces()));
     }
 }
