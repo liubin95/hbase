@@ -70,6 +70,7 @@ public class DMLTestApi {
             put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("addr"), Bytes.toBytes("大连"));
             put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("height"), Bytes.toBytes(RandomUtils.nextDouble(1.0, 2.0)));
             put.addColumn(Bytes.toBytes("exam"), Bytes.toBytes("math"), Bytes.toBytes(RandomUtils.nextInt(0, 100)));
+            puts.add(put);
         }
         table.put(puts);
     }
