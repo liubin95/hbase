@@ -2,8 +2,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.TableDescriptor;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * TestApi.
@@ -50,6 +55,23 @@ public class TestApi {
     @Test
     public void tableExist() throws IOException {
         final TableName tableName = TableName.valueOf("liubin:student");
-        LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>> "+admin.tableExists(tableName));
+        LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>> " + admin.tableExists(tableName));
+    }
+
+    @Test
+    public void tableCreat() throws IOException {
+        final TableName tableName = TableName.valueOf("liubin:stu");
+        final ColumnFamilyDescriptor info = ColumnFamilyDescriptorBuilder
+                .newBuilder("info".getBytes())
+                .build();
+        final ColumnFamilyDescriptor exam = ColumnFamilyDescriptorBuilder
+                .newBuilder("exam".getBytes())
+                .build();
+        final TableDescriptor descriptor = TableDescriptorBuilder
+                .newBuilder(tableName)
+                .setColumnFamilies(Arrays.asList(info, exam))
+                .build();
+        admin.createTable(descriptor);
+        LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>> " + admin.tableExists(tableName));
     }
 }
