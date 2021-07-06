@@ -74,4 +74,12 @@ public class TestApi {
         admin.createTable(descriptor);
         LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>> " + admin.tableExists(tableName));
     }
+
+    @Test
+    public void tableDrop() throws IOException {
+        final TableName tableName = TableName.valueOf("liubin:student");
+        admin.disableTable(tableName);
+        admin.deleteTable(tableName);
+        LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>> " + admin.tableExists(tableName));
+    }
 }
