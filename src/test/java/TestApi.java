@@ -78,7 +78,7 @@ public class TestApi {
     @Test
     public void tableDrop() throws IOException {
         final TableName tableName = TableName.valueOf("liubin:students");
-        if (admin.tableExists(tableName)) {
+        if (!admin.tableExists(tableName)) {
             return;
         }
         admin.disableTable(tableName);
