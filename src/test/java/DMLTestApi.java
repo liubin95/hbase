@@ -4,7 +4,9 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.jupiter.api.AfterAll;
@@ -73,5 +75,19 @@ public class DMLTestApi {
             puts.add(put);
         }
         table.put(puts);
+    }
+
+    @Test
+    public void dataGet() throws IOException {
+        final List<Get> getList = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            final byte[] rowKey = Bytes.toBytes("100" + i);
+            final Get get = new Get(rowKey);
+            getList.add(get);
+        }
+        final Result[] results = table.get(getList);
+        for (Result result : results) {
+            LOGGER.info(result.toString());
+        }
     }
 }
