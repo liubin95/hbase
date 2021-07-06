@@ -71,8 +71,8 @@ public class DMLTestApi {
             put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("name"), Bytes.toBytes(name));
             put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("sex"), Bytes.toBytes("man"));
             put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("addr"), Bytes.toBytes("大连"));
-            put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("height"), Bytes.toBytes(RandomUtils.nextDouble(1.0, 2.0)));
-            put.addColumn(Bytes.toBytes("exam"), Bytes.toBytes("math"), Bytes.toBytes(RandomUtils.nextInt(0, 100)));
+            put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("height"), Bytes.toBytes(String.valueOf(RandomUtils.nextDouble(1.0, 2.0))));
+            put.addColumn(Bytes.toBytes("exam"), Bytes.toBytes("math"), Bytes.toBytes(String.valueOf(RandomUtils.nextInt(0, 100))));
             puts.add(put);
         }
         table.put(puts);
@@ -94,7 +94,7 @@ public class DMLTestApi {
                 final String f = Bytes.toString(cell.getFamilyArray());
                 final String q = Bytes.toString(cell.getQualifierArray());
                 final String v = Bytes.toString(cell.getValueArray());
-                stringBuilder.append(String.format("%s:%s:%s", f, q, v));
+                stringBuilder.append(String.format("%s : %s : %s", f, q, v));
             }
             LOGGER.info(stringBuilder.toString());
         }
