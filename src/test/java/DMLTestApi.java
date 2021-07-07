@@ -91,6 +91,7 @@ public class DMLTestApi {
             final Cell[] cells = result.rawCells();
             StringBuilder stringBuilder = new StringBuilder();
             for (Cell cell : cells) {
+                LOGGER.info(cell.toString());
                 final String f = Bytes.toString(cell.getFamilyArray());
                 final String q = Bytes.toString(cell.getQualifierArray());
                 final String v = Bytes.toString(cell.getValueArray());
@@ -98,5 +99,24 @@ public class DMLTestApi {
             }
             LOGGER.info(stringBuilder.toString());
         }
+    }
+
+    @Test
+    public void dataGet1() throws IOException {
+        final byte[] rowKey = Bytes.toBytes("1001");
+
+        final Get get = new Get(rowKey);
+
+        final Result result = table.get(get);
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Cell cell : result.rawCells()) {
+            LOGGER.info(cell.toString());
+            final String f = Bytes.toString(cell.getFamilyArray());
+            final String q = Bytes.toString(cell.getQualifierArray());
+            final String v = Bytes.toString(cell.getValueArray());
+            stringBuilder.append(String.format("%s : %s : %s", f, q, v));
+            stringBuilder.append("\n");
+        }
+        LOGGER.info(stringBuilder.toString());
     }
 }
