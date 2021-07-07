@@ -359,9 +359,9 @@ public class DMLTestApi {
     @Test
     public void dataGet1() throws IOException {
         final byte[] rowKey = Bytes.toBytes("1001");
-
         final Get get = new Get(rowKey);
-
+        // 获取数据的所有版本
+        get.readAllVersions();
         final Result result = table.get(get);
         StringBuilder stringBuilder = new StringBuilder();
         for (Cell cell : result.rawCells()) {
