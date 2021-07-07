@@ -6,6 +6,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
@@ -346,10 +347,11 @@ public class DMLTestApi {
             final Cell[] cells = result.rawCells();
             StringBuilder stringBuilder = new StringBuilder();
             for (Cell cell : cells) {
+                final String r = Bytes.toString(CellUtil.cloneRow(cell));
                 final String f = Bytes.toString(CellUtil.cloneFamily(cell));
                 final String q = Bytes.toString(CellUtil.cloneQualifier(cell));
                 final String v = Bytes.toString(CellUtil.cloneValue(cell));
-                stringBuilder.append(String.format("%s : %s : %s", f, q, v));
+                stringBuilder.append(String.format("%s : %s : %s : %s", r, f, q, v));
                 stringBuilder.append("\t");
             }
             LOGGER.info(stringBuilder.toString());
@@ -366,12 +368,23 @@ public class DMLTestApi {
         StringBuilder stringBuilder = new StringBuilder();
         for (Cell cell : result.rawCells()) {
             LOGGER.info("cell.toString{}", cell.toString());
+            final String r = Bytes.toString(CellUtil.cloneRow(cell));
             final String f = Bytes.toString(CellUtil.cloneFamily(cell));
             final String q = Bytes.toString(CellUtil.cloneQualifier(cell));
             final String v = Bytes.toString(CellUtil.cloneValue(cell));
-            stringBuilder.append(String.format("%s : %s : %s", f, q, v));
+            stringBuilder.append(String.format("%s : %s : %s : %s", r, f, q, v));
             stringBuilder.append("\t");
         }
         LOGGER.info("stringBuilder:{}", stringBuilder.toString());
+    }
+
+    @Test
+    public void dataDelete() throws IOException {
+        final byte[] rowKey = Bytes.toBytes("1001");
+        final Delete delete = new Delete(rowKey);
+        table.delete(delete);
+        final Get get = new Get(rowKey);
+        final boolean exists = table.exists(get);
+        LOGGER.info("1001 exists:{}", exists);
     }
 }

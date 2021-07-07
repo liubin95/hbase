@@ -58,11 +58,11 @@ public class ScanTestApi {
         for (Result result : scanner) {
             StringBuilder stringBuilder = new StringBuilder();
             for (Cell cell : result.rawCells()) {
-                LOGGER.info("cell.toString{}", cell.toString());
+                final String r = Bytes.toString(CellUtil.cloneRow(cell));
                 final String f = Bytes.toString(CellUtil.cloneFamily(cell));
                 final String q = Bytes.toString(CellUtil.cloneQualifier(cell));
                 final String v = Bytes.toString(CellUtil.cloneValue(cell));
-                stringBuilder.append(String.format("%s : %s : %s", f, q, v));
+                stringBuilder.append(String.format("%s : %s : %s : %s", r, f, q, v));
                 stringBuilder.append("\t");
             }
             LOGGER.info(stringBuilder.toString());
