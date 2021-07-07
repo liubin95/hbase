@@ -394,6 +394,7 @@ public class DMLTestApi {
         final Delete delete = new Delete(rowKey);
         // 删除一个版本
         // 如果传入时间戳,则删除指定版本数据.不影响其他版本
+        // 慎用.多使用addColumns
         delete.addColumn(Bytes.toBytes("exam"), Bytes.toBytes("math"));
         // 删除全部版本
         // 如果传入时间戳,则删除比时间戳小的所有数据
