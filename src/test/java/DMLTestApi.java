@@ -370,7 +370,7 @@ public class DMLTestApi {
             final String q = Bytes.toString(CellUtil.cloneQualifier(cell));
             final String v = Bytes.toString(CellUtil.cloneValue(cell));
             stringBuilder.append(String.format("%s : %s : %s", f, q, v));
-            stringBuilder.append("\n");
+            stringBuilder.append("\t");
         }
         LOGGER.info("stringBuilder:{}", stringBuilder.toString());
     }
