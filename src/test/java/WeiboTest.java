@@ -7,6 +7,8 @@ import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
@@ -84,5 +86,29 @@ public class WeiboTest {
                 .build();
         admin.createTable(descriptor, Bytes.toBytes("000|"), Bytes.toBytes("004|"), 5);
         admin.createTable(descriptorContent, Bytes.toBytes("000|"), Bytes.toBytes("004|"), 5);
+    }
+
+    @Test
+    public void creatUser(Long uid) throws IOException {
+        final byte[] rowKey = Bytes.toBytes("00" + uid % 5 + "_" + System.currentTimeMillis());
+        final Put put = new Put(rowKey);
+        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("attention"), Bytes.toBytes(""));
+        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("fans"), Bytes.toBytes(""));
+        tableUser.put(put);
+    }
+
+    @Test
+    public void sendWeibo(Long uid, String content) throws IOException {
+        final byte[] rowKey = Bytes.toBytes("00" + uid % 5 + "_" + System.currentTimeMillis());
+        final Put put = new Put(rowKey);
+        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("content"), Bytes.toBytes(content));
+        tableContent.put(put);
+    }
+
+    @Test
+    public void weiboDelete(String id) throws IOException {
+        final byte[] rowKey = Bytes.toBytes(id);
+        final Delete delete = new Delete(rowKey);
+        tableContent.delete(delete);
     }
 }
