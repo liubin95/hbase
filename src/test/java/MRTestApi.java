@@ -63,7 +63,7 @@ public class MRTestApi {
                 .setColumnFamilies(Arrays.asList(info, exam))
                 .build();
         // 预设10个分区，会把【0-9】平均分成10个
-        admin.createTable(descriptor, Bytes.toBytes("000|"), Bytes.toBytes("298|"), 10);
+        admin.createTable(descriptor, Bytes.toBytes("000|"), Bytes.toBytes("009|"), 10);
     }
 
 }
