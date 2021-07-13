@@ -102,11 +102,12 @@ public class WeiboTest {
 
     @Test
     public void sendWeibo() throws IOException {
-        final long uid = Long.parseLong(System.getProperty("uid"));
+        final String uid = System.getProperty("uid");
         final String content = System.getProperty("content");
-        final byte[] rowKey = Bytes.toBytes("00" + uid % 5 + "_" + System.currentTimeMillis());
+        final byte[] rowKey = Bytes.toBytes(uid.substring(0, 4) + System.currentTimeMillis());
         final Put put = new Put(rowKey);
         put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("content"), Bytes.toBytes(content));
+        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("uid"), Bytes.toBytes(uid));
         tableContent.put(put);
     }
 

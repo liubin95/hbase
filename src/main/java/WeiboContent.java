@@ -9,5 +9,7 @@ public class WeiboContent {
 
     String id;
 
+    String uid;
+
     String conTent;
 }
