@@ -91,8 +91,10 @@ public class WeiboTest {
     @Test
     public void creatUser() throws IOException {
         final long uid = Long.parseLong(System.getProperty("uid"));
+        final String uName = System.getProperty("uName");
         final byte[] rowKey = Bytes.toBytes("00" + uid % 5 + "_" + System.currentTimeMillis());
         final Put put = new Put(rowKey);
+        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("uName"), Bytes.toBytes(uName));
         put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("attention"), Bytes.toBytes(""));
         put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("fans"), Bytes.toBytes(""));
         tableUser.put(put);
