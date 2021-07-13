@@ -301,7 +301,7 @@ public class DMLTestApi {
         Configuration config = HBaseConfiguration.create();
         config.set("hbase.zookeeper.quorum", "localhost");
         connection = ConnectionFactory.createConnection(config);
-        final TableName tableName = TableName.valueOf("liubin:stu");
+        final TableName tableName = TableName.valueOf("stu1");
         table = connection.getTable(tableName);
     }
 
