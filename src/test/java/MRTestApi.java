@@ -51,7 +51,7 @@ public class MRTestApi {
 
     @Test
     public void createTableWithRegions() throws IOException {
-        final TableName tableName = TableName.valueOf("stu1");
+        final TableName tableName = TableName.valueOf("stu2");
         final ColumnFamilyDescriptor info = ColumnFamilyDescriptorBuilder
                 .newBuilder("info".getBytes())
                 .build();
@@ -63,7 +63,7 @@ public class MRTestApi {
                 .setColumnFamilies(Arrays.asList(info, exam))
                 .build();
         // 预设10个分区，会把【0-9】平均分成10个
-        admin.createTable(descriptor, Bytes.toBytes(0), Bytes.toBytes(9), 10);
+        admin.createTable(descriptor, Bytes.toBytes("000|"), Bytes.toBytes("298|"), 10);
     }
 
 }
