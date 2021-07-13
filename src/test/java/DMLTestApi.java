@@ -319,7 +319,7 @@ public class DMLTestApi {
         final List<Put> puts = new ArrayList<>();
         for (int i = 1; i < 1000; i++) {
             // 创建put
-            final byte[] rowKey = Bytes.toBytes(i);
+            final byte[] rowKey = Bytes.toBytes(String.valueOf(i));
             // 列族
             Put put = new Put(rowKey);
             // 列族,列名,值
