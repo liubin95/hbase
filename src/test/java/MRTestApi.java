@@ -51,7 +51,7 @@ public class MRTestApi {
 
     @Test
     public void createTableWithRegions() throws IOException {
-        final TableName tableName = TableName.valueOf("stu2");
+        final TableName tableName = TableName.valueOf("stu3");
         final ColumnFamilyDescriptor info = ColumnFamilyDescriptorBuilder
                 .newBuilder("info".getBytes())
                 .build();
