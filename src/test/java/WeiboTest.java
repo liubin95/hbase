@@ -89,7 +89,8 @@ public class WeiboTest {
     }
 
     @Test
-    public void creatUser(Long uid) throws IOException {
+    public void creatUser() throws IOException {
+        final long uid = Long.parseLong(System.getProperty("uid"));
         final byte[] rowKey = Bytes.toBytes("00" + uid % 5 + "_" + System.currentTimeMillis());
         final Put put = new Put(rowKey);
         put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("attention"), Bytes.toBytes(""));
@@ -98,7 +99,9 @@ public class WeiboTest {
     }
 
     @Test
-    public void sendWeibo(Long uid, String content) throws IOException {
+    public void sendWeibo() throws IOException {
+        final long uid = Long.parseLong(System.getProperty("uid"));
+        final String content = System.getProperty("content");
         final byte[] rowKey = Bytes.toBytes("00" + uid % 5 + "_" + System.currentTimeMillis());
         final Put put = new Put(rowKey);
         put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("content"), Bytes.toBytes(content));
@@ -106,7 +109,8 @@ public class WeiboTest {
     }
 
     @Test
-    public void weiboDelete(String id) throws IOException {
+    public void weiboDelete() throws IOException {
+        final String id = System.getProperty("id");
         final byte[] rowKey = Bytes.toBytes(id);
         final Delete delete = new Delete(rowKey);
         tableContent.delete(delete);
