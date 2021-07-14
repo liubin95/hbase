@@ -26,7 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * TestApi.
@@ -136,6 +138,10 @@ public class WeiboTest {
 
     /**
      * uid关注id
+     * <p>
+     * 【张三 1】关注【李四 2】
+     *
+     * </p>
      *
      * @throws IOException IOException
      */
@@ -157,20 +163,56 @@ public class WeiboTest {
         tableRelations.put(put);
     }
 
+    /**
+     * 查看关注人列表
+     *
+     * @throws IOException IOException
+     */
     @Test
-    void followerList() throws IOException {
+    Set<String> followerList() throws IOException {
         final String id = System.getProperty("id");
         final Scan scan = new Scan();
         scan.withStartRow(Bytes.toBytes(id));
         scan.withStopRow(Bytes.toBytes(id + "|"));
         final ResultScanner scanner = tableRelations.getScanner(scan);
+        final Set<String> strings = new HashSet<>();
         for (Result result : scanner) {
             final List<Cell> cells = result.listCells();
             cells.stream().map(cell -> {
                 final String userId = Bytes.toString(CellUtil.cloneQualifier(cell));
                 final String userName = Bytes.toString(CellUtil.cloneValue(cell));
-                return userId + " : " + userName;
+                final String str = userId + " : " + userName;
+                strings.add(str);
+                return str;
             }).forEach(LOGGER::info);
+        }
+        return strings;
+    }
+
+    /**
+     * 获取推送用户的内容
+     * <p>
+     * 即关注人的微博列表
+     * </p>
+     *
+     * @throws IOException IOException
+     */
+    @Test
+    void followerFeed() throws IOException {
+        final Set<String> strings = this.followerList();
+        for (String string : strings) {
+            final String[] split = string.split(" : ");
+            final String userId = split[0];
+            final String userName = split[1];
+            final Scan scan = new Scan();
+            scan.withStartRow(Bytes.toBytes(userId));
+            scan.withStopRow(Bytes.toBytes(userId + "|"));
+            final ResultScanner scanner = tableContent.getScanner(scan);
+            for (Result result : scanner) {
+                final Cell cell = result.getColumnLatestCell(Bytes.toBytes("info"), Bytes.toBytes("content"));
+                final String content = Bytes.toString(CellUtil.cloneValue(cell));
+                LOGGER.info("{} : {}", userName, content);
+            }
         }
     }
 }
