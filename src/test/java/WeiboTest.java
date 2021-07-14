@@ -53,6 +53,8 @@ public class WeiboTest {
 
     private static Table tableRelations;
 
+    private static Table tableRelationsFans;
+
 
     @BeforeAll
     static void beforeAll() throws IOException {
@@ -63,10 +65,13 @@ public class WeiboTest {
         tableUser = connection.getTable(TableName.valueOf("weibo-user"));
         tableContent = connection.getTable(TableName.valueOf("weibo-content"));
         tableRelations = connection.getTable(TableName.valueOf("weibo-relations"));
+        tableRelationsFans = connection.getTable(TableName.valueOf("weibo-relations-fans"));
     }
 
     @AfterAll
     static void afterAll() throws IOException {
+        tableRelations.close();
+        tableRelationsFans.close();
         tableUser.close();
         tableContent.close();
         admin.close();
@@ -94,7 +99,7 @@ public class WeiboTest {
                 .setColumnFamilies(Collections.singletonList(info))
                 .build();
 
-        // 关系表
+        // 关注表
         final TableName tableNameRelations = TableName.valueOf("weibo-relations");
         final ColumnFamilyDescriptor infoRelations = ColumnFamilyDescriptorBuilder
                 .newBuilder("f".getBytes())
@@ -104,9 +109,20 @@ public class WeiboTest {
                 .setColumnFamilies(Collections.singletonList(infoRelations))
                 .build();
 
+        // 粉丝表
+        final TableName tableNameRelationsFans = TableName.valueOf("weibo-relations-fans");
+        final ColumnFamilyDescriptor infoRelationsFans = ColumnFamilyDescriptorBuilder
+                .newBuilder("f".getBytes())
+                .build();
+        final TableDescriptor descriptorRelationsFans = TableDescriptorBuilder
+                .newBuilder(tableNameRelationsFans)
+                .setColumnFamilies(Collections.singletonList(infoRelationsFans))
+                .build();
+
         admin.createTable(descriptor);
         admin.createTable(descriptorContent);
         admin.createTable(descriptorRelations);
+        admin.createTable(descriptorRelationsFans);
     }
 
     @Test
@@ -163,6 +179,19 @@ public class WeiboTest {
         // CQ : followed userid
         put.addColumn(Bytes.toBytes("f"), Bytes.toBytes(id), userName);
         tableRelations.put(put);
+
+        // 粉丝部分
+        // followed + follower
+        final byte[] rowKeyFans = Bytes.toBytes(id + uid);
+        final Put putFans = new Put(rowKeyFans);
+        final Get getFans = new Get(Bytes.toBytes(uid));
+        // value : follower userName
+        final Result userFans = tableUser.get(getFans);
+        final byte[] userNameFans = CellUtil.cloneValue(userFans.getColumnLatestCell(Bytes.toBytes("info"), Bytes.toBytes("uName")));
+        // CQ : follower userid
+        put.addColumn(Bytes.toBytes("f"), Bytes.toBytes(uid), userNameFans);
+        tableRelationsFans.put(putFans);
+
     }
 
     /**
@@ -171,9 +200,21 @@ public class WeiboTest {
      * @throws IOException IOException
      */
     @Test
-    void followerList() throws IOException {
+    void followedList() throws IOException {
         final String id = System.getProperty("id");
-        final Set<String> followerList = getFollowerList(id);
+        final Set<String> followerList = getFollowedList(tableRelations, id);
+        followerList.forEach(LOGGER::info);
+    }
+
+    /**
+     * 查看粉丝列表
+     *
+     * @throws IOException IOException
+     */
+    @Test
+    void fansList() throws IOException {
+        final String id = System.getProperty("id");
+        final Set<String> followerList = getFollowedList(tableRelationsFans, id);
         followerList.forEach(LOGGER::info);
     }
 
@@ -184,11 +225,11 @@ public class WeiboTest {
      * @return [id : userName]
      * @throws IOException IOException
      */
-    private static Set<String> getFollowerList(String id) throws IOException {
+    private static Set<String> getFollowedList(Table table, String id) throws IOException {
         final Scan scan = new Scan();
         scan.withStartRow(Bytes.toBytes(id));
         scan.withStopRow(Bytes.toBytes(id + "|"));
-        final ResultScanner scanner = tableRelations.getScanner(scan);
+        final ResultScanner scanner = table.getScanner(scan);
         final Set<String> strings = new HashSet<>();
         for (Result result : scanner) {
             final List<Cell> cells = result.listCells();
@@ -236,7 +277,7 @@ public class WeiboTest {
     @Test
     void followerFeed() throws IOException {
         final String id = System.getProperty("id");
-        final Set<String> strings = getFollowerList(id);
+        final Set<String> strings = getFollowedList(tableRelations, id);
         for (String string : strings) {
             final Map<String, String> userWeibo = getUserWeibo(string);
             userWeibo.forEach((k, v) -> LOGGER.info("{} : {}", k, v));
