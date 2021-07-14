@@ -26,8 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -155,7 +157,7 @@ public class WeiboTest {
         final byte[] rowKey = Bytes.toBytes(uid + id);
         final Put put = new Put(rowKey);
         final Get get = new Get(Bytes.toBytes(id));
-        // value:userName
+        // value : followed userName
         final Result user = tableUser.get(get);
         final byte[] userName = CellUtil.cloneValue(user.getColumnLatestCell(Bytes.toBytes("info"), Bytes.toBytes("uName")));
         // CQ : followed userid
@@ -169,8 +171,20 @@ public class WeiboTest {
      * @throws IOException IOException
      */
     @Test
-    Set<String> followerList() throws IOException {
+    void followerList() throws IOException {
         final String id = System.getProperty("id");
+        final Set<String> followerList = getFollowerList(id);
+        followerList.forEach(LOGGER::info);
+    }
+
+    /**
+     * 查看关注人列表
+     *
+     * @param id id
+     * @return [id : userName]
+     * @throws IOException IOException
+     */
+    private static Set<String> getFollowerList(String id) throws IOException {
         final Scan scan = new Scan();
         scan.withStartRow(Bytes.toBytes(id));
         scan.withStopRow(Bytes.toBytes(id + "|"));
@@ -181,12 +195,34 @@ public class WeiboTest {
             cells.stream().map(cell -> {
                 final String userId = Bytes.toString(CellUtil.cloneQualifier(cell));
                 final String userName = Bytes.toString(CellUtil.cloneValue(cell));
-                final String str = userId + " : " + userName;
-                strings.add(str);
-                return str;
-            }).forEach(LOGGER::info);
+                return userId + " : " + userName;
+            }).forEach(strings::add);
         }
         return strings;
+    }
+
+    /**
+     * 获取用户的微博
+     *
+     * @param string id : userName
+     * @return [userName, content]
+     * @throws IOException IOException
+     */
+    private static Map<String, String> getUserWeibo(String string) throws IOException {
+        final String[] split = string.split(" : ");
+        final String userId = split[0];
+        final String userName = split[1];
+        final Scan scan = new Scan();
+        scan.withStartRow(Bytes.toBytes(userId));
+        scan.withStopRow(Bytes.toBytes(userId + "|"));
+        final ResultScanner scanner = tableContent.getScanner(scan);
+        final Map<String, String> map = new HashMap<>();
+        for (Result result : scanner) {
+            final Cell cell = result.getColumnLatestCell(Bytes.toBytes("info"), Bytes.toBytes("content"));
+            final String content = Bytes.toString(CellUtil.cloneValue(cell));
+            map.put(userName, content);
+        }
+        return map;
     }
 
     /**
@@ -199,20 +235,11 @@ public class WeiboTest {
      */
     @Test
     void followerFeed() throws IOException {
-        final Set<String> strings = this.followerList();
+        final String id = System.getProperty("id");
+        final Set<String> strings = getFollowerList(id);
         for (String string : strings) {
-            final String[] split = string.split(" : ");
-            final String userId = split[0];
-            final String userName = split[1];
-            final Scan scan = new Scan();
-            scan.withStartRow(Bytes.toBytes(userId));
-            scan.withStopRow(Bytes.toBytes(userId + "|"));
-            final ResultScanner scanner = tableContent.getScanner(scan);
-            for (Result result : scanner) {
-                final Cell cell = result.getColumnLatestCell(Bytes.toBytes("info"), Bytes.toBytes("content"));
-                final String content = Bytes.toString(CellUtil.cloneValue(cell));
-                LOGGER.info("{} : {}", userName, content);
-            }
+            final Map<String, String> userWeibo = getUserWeibo(string);
+            userWeibo.forEach((k, v) -> LOGGER.info("{} : {}", k, v));
         }
     }
 }
