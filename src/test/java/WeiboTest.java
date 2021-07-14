@@ -1,6 +1,7 @@
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
@@ -8,7 +9,11 @@ import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
@@ -21,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * TestApi.
@@ -41,6 +47,8 @@ public class WeiboTest {
 
     private static Table tableContent;
 
+    private static Table tableRelations;
+
 
     @BeforeAll
     static void beforeAll() throws IOException {
@@ -50,6 +58,7 @@ public class WeiboTest {
         admin = connection.getAdmin();
         tableUser = connection.getTable(TableName.valueOf("weibo-user"));
         tableContent = connection.getTable(TableName.valueOf("weibo-content"));
+        tableRelations = connection.getTable(TableName.valueOf("weibo-relations"));
     }
 
     @AfterAll
@@ -63,10 +72,8 @@ public class WeiboTest {
 
     @Test
     public void creatTable() throws IOException {
-        final NamespaceDescriptor weibo = NamespaceDescriptor.create("weibo")
-                .build();
-        admin.createNamespace(weibo);
 
+        // 用户表
         final TableName tableName = TableName.valueOf("weibo-user");
         final ColumnFamilyDescriptor info = ColumnFamilyDescriptorBuilder
                 .newBuilder("info".getBytes())
@@ -76,27 +83,36 @@ public class WeiboTest {
                 .setColumnFamilies(Collections.singletonList(info))
                 .build();
 
+        // 内容表
         final TableName tableNameContent = TableName.valueOf("weibo-content");
-        final ColumnFamilyDescriptor infoContent = ColumnFamilyDescriptorBuilder
-                .newBuilder("info".getBytes())
-                .build();
         final TableDescriptor descriptorContent = TableDescriptorBuilder
                 .newBuilder(tableNameContent)
-                .setColumnFamilies(Collections.singletonList(infoContent))
+                .setColumnFamilies(Collections.singletonList(info))
                 .build();
-        admin.createTable(descriptor, Bytes.toBytes("000|"), Bytes.toBytes("004|"), 5);
-        admin.createTable(descriptorContent, Bytes.toBytes("000|"), Bytes.toBytes("004|"), 5);
+
+        // 关系表
+        final TableName tableNameRelations = TableName.valueOf("weibo-relations");
+        final ColumnFamilyDescriptor infoRelations = ColumnFamilyDescriptorBuilder
+                .newBuilder("f".getBytes())
+                .build();
+        final TableDescriptor descriptorRelations = TableDescriptorBuilder
+                .newBuilder(tableNameRelations)
+                .setColumnFamilies(Collections.singletonList(infoRelations))
+                .build();
+
+        admin.createTable(descriptor);
+        admin.createTable(descriptorContent);
+        admin.createTable(descriptorRelations);
     }
 
     @Test
     public void creatUser() throws IOException {
-        final long uid = Long.parseLong(System.getProperty("uid"));
+        final String uid = System.getProperty("uid");
         final String uName = System.getProperty("uName");
-        final byte[] rowKey = Bytes.toBytes("00" + uid % 5 + "_" + System.currentTimeMillis());
+
+        final byte[] rowKey = Bytes.toBytes(uid);
         final Put put = new Put(rowKey);
         put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("uName"), Bytes.toBytes(uName));
-        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("attention"), Bytes.toBytes(""));
-        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("fans"), Bytes.toBytes(""));
         tableUser.put(put);
     }
 
@@ -104,10 +120,9 @@ public class WeiboTest {
     public void sendWeibo() throws IOException {
         final String uid = System.getProperty("uid");
         final String content = System.getProperty("content");
-        final byte[] rowKey = Bytes.toBytes(uid.substring(0, 4) + System.currentTimeMillis());
+        final byte[] rowKey = Bytes.toBytes(uid + "_" + System.currentTimeMillis());
         final Put put = new Put(rowKey);
         put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("content"), Bytes.toBytes(content));
-        put.addColumn(Bytes.toBytes("info"), Bytes.toBytes("uid"), Bytes.toBytes(uid));
         tableContent.put(put);
     }
 
@@ -117,5 +132,45 @@ public class WeiboTest {
         final byte[] rowKey = Bytes.toBytes(id);
         final Delete delete = new Delete(rowKey);
         tableContent.delete(delete);
+    }
+
+    /**
+     * uid关注id
+     *
+     * @throws IOException IOException
+     */
+    @Test
+    void follow() throws IOException {
+        // 被关注人
+        final String id = System.getProperty("id");
+        // 关注人
+        final String uid = System.getProperty("uid");
+        // follower + followed
+        final byte[] rowKey = Bytes.toBytes(uid + id);
+        final Put put = new Put(rowKey);
+        final Get get = new Get(Bytes.toBytes(id));
+        // value:userName
+        final Result user = tableUser.get(get);
+        final byte[] userName = CellUtil.cloneValue(user.getColumnLatestCell(Bytes.toBytes("info"), Bytes.toBytes("uName")));
+        // CQ : followed userid
+        put.addColumn(Bytes.toBytes("f"), Bytes.toBytes(id), userName);
+        tableRelations.put(put);
+    }
+
+    @Test
+    void followerList() throws IOException {
+        final String id = System.getProperty("id");
+        final Scan scan = new Scan();
+        scan.withStartRow(Bytes.toBytes(id));
+        scan.withStopRow(Bytes.toBytes(id + "|"));
+        final ResultScanner scanner = tableRelations.getScanner(scan);
+        for (Result result : scanner) {
+            final List<Cell> cells = result.listCells();
+            cells.stream().map(cell -> {
+                final String userId = Bytes.toString(CellUtil.cloneQualifier(cell));
+                final String userName = Bytes.toString(CellUtil.cloneValue(cell));
+                return userId + " : " + userName;
+            }).forEach(LOGGER::info);
+        }
     }
 }
