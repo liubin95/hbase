@@ -189,7 +189,7 @@ public class WeiboTest {
         final Result userFans = tableUser.get(getFans);
         final byte[] userNameFans = CellUtil.cloneValue(userFans.getColumnLatestCell(Bytes.toBytes("info"), Bytes.toBytes("uName")));
         // CQ : follower userid
-        put.addColumn(Bytes.toBytes("f"), Bytes.toBytes(uid), userNameFans);
+        putFans.addColumn(Bytes.toBytes("f"), Bytes.toBytes(uid), userNameFans);
         tableRelationsFans.put(putFans);
 
     }
