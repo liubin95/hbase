@@ -221,7 +221,8 @@ public class WeiboTest {
     /**
      * 查看关注人列表
      *
-     * @param id id
+     * @param id    id
+     * @param table tableRelations 即关注人列表；tableRelationsFans 即粉丝列表
      * @return [id : userName]
      * @throws IOException IOException
      */
@@ -282,5 +283,29 @@ public class WeiboTest {
             final Map<String, String> userWeibo = getUserWeibo(string);
             userWeibo.forEach((k, v) -> LOGGER.info("{} : {}", k, v));
         }
+    }
+
+    /**
+     * uid取消关注id
+     * <p>
+     * 【张三 1】取消关注【李四 2】
+     * </p>
+     *
+     * @throws IOException IOException
+     */
+    @Test
+    void checkOff() throws IOException {
+        // 被关注人
+        final String id = System.getProperty("id");
+        // 关注人
+        final String uid = System.getProperty("uid");
+        // 删除关注
+        final byte[] rowKey1 = Bytes.toBytes(uid + id);
+        final Delete delete1 = new Delete(rowKey1);
+        tableRelations.delete(delete1);
+        // 删除粉丝
+        final byte[] rowKey2 = Bytes.toBytes(id + uid);
+        final Delete delete2 = new Delete(rowKey2);
+        tableRelationsFans.delete(delete2);
     }
 }
