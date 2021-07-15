@@ -1,6 +1,7 @@
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -9,6 +10,9 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.RegexStringComparator;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -55,7 +59,9 @@ public class ScanTestApi {
     public void TableScan() throws IOException {
         final Scan scan = new Scan();
         final ResultScanner scanner = table.getScanner(scan);
+        int i = 0;
         for (Result result : scanner) {
+            i++;
             StringBuilder stringBuilder = new StringBuilder();
             for (Cell cell : result.rawCells()) {
                 final String r = Bytes.toString(CellUtil.cloneRow(cell));
@@ -67,6 +73,31 @@ public class ScanTestApi {
             }
             LOGGER.info(stringBuilder.toString());
         }
+        LOGGER.info("{}条数据", i);
+    }
+
+    @Test
+    public void TableScanFilter() throws IOException {
+        final Scan scan = new Scan();
+        final Filter filter = new SingleColumnValueFilter(Bytes.toBytes("info"), Bytes.toBytes("sex"), CompareOperator.EQUAL, new RegexStringComparator("男"));
+        scan.setFilter(filter);
+        final ResultScanner scanner = table.getScanner(scan);
+        int i = 0;
+        for (Result result : scanner) {
+            i++;
+            StringBuilder stringBuilder = new StringBuilder();
+            for (Cell cell : result.rawCells()) {
+                final String r = Bytes.toString(CellUtil.cloneRow(cell));
+                final String f = Bytes.toString(CellUtil.cloneFamily(cell));
+                final String q = Bytes.toString(CellUtil.cloneQualifier(cell));
+                final String v = Bytes.toString(CellUtil.cloneValue(cell));
+                stringBuilder.append(String.format("%s : %s : %s : %s", r, f, q, v));
+                stringBuilder.append("\t");
+            }
+            LOGGER.info(stringBuilder.toString());
+        }
+        LOGGER.info("{}条数据", i);
+
     }
 
 }

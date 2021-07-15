@@ -158,7 +158,7 @@ public class WeiboTest {
      * uid关注id
      * <p>
      * 【张三 1】关注【李四 2】
-     *
+     * 【张三 1】关注【王五 3】
      * </p>
      *
      * @throws IOException IOException
